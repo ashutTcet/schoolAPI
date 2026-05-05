@@ -8,10 +8,10 @@ exports.addSchool = (req, res) => {
     return res.status(400).json({ message: "Request body is missing" });
   }
 
-  const { id, name, address, latitude, longitude } = req.body;
+  const {name, address, latitude, longitude } = req.body;
 
   // Validation
-  if (!id || !name || !address || latitude == null || longitude == null) {
+  if ( !name || !address || latitude == null || longitude == null) {
     return res.status(400).json({
       message: "All fields (id, name, address, latitude, longitude) are required"
     });
@@ -25,10 +25,10 @@ exports.addSchool = (req, res) => {
 
   const query = `
     INSERT INTO schools (id, name, address, latitude, longitude)
-    VALUES (? ,?, ?, ?, ?)
+    VALUES (?, ?, ?, ?)
   `;
 
-  db.query(query, [id, name, address, latitude, longitude], (err, result) => {
+  db.query(query, [ name, address, latitude, longitude], (err, result) => {
     if (err) {
       console.error("Insert Error:", err);
       return res.status(500).json({ message: "Database error" });
