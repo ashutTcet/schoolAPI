@@ -1,14 +1,10 @@
-const db = require('../config/db');
-const getDistance = require('../utils/distance');
-
-// ➤ Add School API
 exports.addSchool = (req, res) => {
   // Safety check (prevents crash if body missing)
   if (!req.body) {
     return res.status(400).json({ message: "Request body is missing" });
   }
 
-  const {name, address, latitude, longitude } = req.body;
+  const { name, address, latitude, longitude } = req.body;
 
   // Validation
   if ( !name || !address || latitude == null || longitude == null) {
@@ -28,7 +24,7 @@ exports.addSchool = (req, res) => {
     VALUES (?, ?, ?, ?)
   `;
 
-  db.query(query, [ name, address, latitude, longitude], (err, result) => {
+  db.query(query, [id, name, address, latitude, longitude], (err, result) => {
     if (err) {
       console.error("Insert Error:", err);
       return res.status(500).json({ message: "Database error" });
