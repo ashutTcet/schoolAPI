@@ -1,7 +1,7 @@
 const supabase = require('../config/db');
 const getDistance = require('../utils/distance');
 
-// ➤ Add School
+// Add School
 exports.addSchool = async (req, res) => {
   try {
     const { name, address, latitude, longitude } = req.body;
@@ -34,7 +34,7 @@ exports.addSchool = async (req, res) => {
 };
 
 
-// ➤ List Schools
+// List Schools
 exports.listSchools = async (req, res) => {
   try {
     const { latitude, longitude } = req.query;
