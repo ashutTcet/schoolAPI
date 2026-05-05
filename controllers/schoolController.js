@@ -1,68 +1,58 @@
-exports.addSchool = (req, res) => {
-  // Safety check (prevents crash if body missing)
-  if (!req.body) {
-    return res.status(400).json({ message: "Request body is missing" });
-  }
+const supabase = require('../config/db');
+const getDistance = require('../utils/distance');
 
-  const { name, address, latitude, longitude } = req.body;
+// ➤ Add School
+exports.addSchool = async (req, res) => {
+  try {
+    const { name, address, latitude, longitude } = req.body;
 
-  // Validation
-  if ( !name || !address || latitude == null || longitude == null) {
-    return res.status(400).json({
-      message: "All fields (id, name, address, latitude, longitude) are required"
-    });
-  }
+    if (!name || !address || latitude == null || longitude == null) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
-  if (isNaN(latitude) || isNaN(longitude)) {
-    return res.status(400).json({
-      message: "Latitude and Longitude must be numbers"
-    });
-  }
+    const { data, error } = await supabase
+      .from('schools')
+      .insert([
+        { name, address, latitude, longitude }
+      ])
+      .select();
 
-  const query = `
-    INSERT INTO schools (id, name, address, latitude, longitude)
-    VALUES (?, ?, ?, ?)
-  `;
-
-  db.query(query, [id, name, address, latitude, longitude], (err, result) => {
-    if (err) {
-      console.error("Insert Error:", err);
-      return res.status(500).json({ message: "Database error" });
+    if (error) {
+      console.error("Insert Error:", error);
+      return res.status(500).json({ message: "Database error", error });
     }
 
     res.status(201).json({
       message: "School added successfully",
-      schoolId: result.insertId
+      data
     });
-  });
+
+  } catch (err) {
+    console.error("Crash:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 
-// ➤ List Schools API
-exports.listSchools = (req, res) => {
-  const { latitude, longitude } = req.query;
+// ➤ List Schools
+exports.listSchools = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.query;
 
-  // Validation
-  if (!latitude || !longitude) {
-    return res.status(400).json({
-      message: "User latitude and longitude are required"
-    });
-  }
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: "Coordinates required" });
+    }
 
-  if (isNaN(latitude) || isNaN(longitude)) {
-    return res.status(400).json({
-      message: "Invalid coordinates"
-    });
-  }
+    const { data, error } = await supabase
+      .from('schools')
+      .select('*');
 
-  db.query("SELECT * FROM schools", (err, results) => {
-    if (err) {
-      console.error("Fetch Error:", err);
+    if (error) {
+      console.error("Fetch Error:", error);
       return res.status(500).json({ message: "Database error" });
     }
 
-    // Add distance & sort
-    const sortedSchools = results
+    const sorted = data
       .map((school) => {
         const distance = getDistance(
           parseFloat(latitude),
@@ -73,14 +63,18 @@ exports.listSchools = (req, res) => {
 
         return {
           ...school,
-          distance: Number(distance.toFixed(2)) // rounded to 2 decimals
+          distance: Number(distance.toFixed(2))
         };
       })
       .sort((a, b) => a.distance - b.distance);
 
     res.json({
-      count: sortedSchools.length,
-      schools: sortedSchools
+      count: sorted.length,
+      schools: sorted
     });
-  });
+
+  } catch (err) {
+    console.error("Crash:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
